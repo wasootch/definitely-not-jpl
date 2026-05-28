@@ -2,6 +2,9 @@ package org.example;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class MarsRoverIntegrationTest {
@@ -20,6 +23,11 @@ class MarsRoverIntegrationTest {
         coordinator.commandRover("Curiosity", "FFRFF");
         assertArrayEquals(new int[]{2, 2}, rover.getPosition());
         assertEquals(Direction.East, rover.getDirection());
+
+        List<CommandRecord> history = coordinator.getHistory("Curiosity");
+        assertEquals(1, history.size());
+        assertEquals("FFRFF", history.get(0).getCommands());
+        assertTrue(history.get(0).succeeded());
     }
 
     @Test
@@ -28,6 +36,11 @@ class MarsRoverIntegrationTest {
         coordinator.deployRover(rover);
         coordinator.commandRover("Spirit", "FF");
         assertArrayEquals(new int[]{0, 5}, rover.getPosition());
+
+        List<CommandRecord> history = coordinator.getHistory("Spirit");
+        assertEquals(1, history.size());
+        assertEquals("FF", history.get(0).getCommands());
+        assertFalse(history.get(0).succeeded());
     }
 
     @Test
@@ -103,5 +116,10 @@ class MarsRoverIntegrationTest {
         coordinator.commandRover("Rover", "RF");   // turn east, move
         assertArrayEquals(new int[]{1, 5}, rover.getPosition());
         assertEquals(Direction.East, rover.getDirection());
+
+        List<CommandRecord> history = coordinator.getHistory("Rover");
+        assertEquals(2, history.size());
+        assertFalse(history.get(0).succeeded());
+        assertTrue(history.get(1).succeeded());
     }
 }

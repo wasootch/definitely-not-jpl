@@ -1,11 +1,19 @@
 package org.example;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SquadCoordinator {
+    private static final int MAX_HISTORY = 10;
+
     private final SurfaceGrid surfaceGrid;
     private final List<Rover> rovers = new ArrayList<>();
+    private final Map<String, Deque<CommandRecord>> history = new HashMap<>();
 
     public SquadCoordinator() {
         this(new SurfaceGrid());
@@ -22,6 +30,7 @@ public class SquadCoordinator {
 
         this.surfaceGrid.register(rover.getPosition());
         rovers.add(rover);
+        history.put(rover.getName(), new ArrayDeque<>());
     }
 
     public boolean commandRover(String name, String commands) {
@@ -31,7 +40,22 @@ public class SquadCoordinator {
                 .orElseThrow(() -> new IllegalArgumentException("Rover not found: " + name));
 
         MovementExecutor executor = new MovementExecutor(rover, surfaceGrid);
-        return executor.executeCommands(commands);
+        boolean result = executor.executeCommands(commands);
+
+        Deque<CommandRecord> roverHistory = history.get(name);
+        if (roverHistory.size() == MAX_HISTORY) {
+            roverHistory.pollFirst();
+        }
+        roverHistory.addLast(new CommandRecord(name, commands, result));
+
+        return result;
+    }
+
+    public List<CommandRecord> getHistory(String name) {
+        if (!history.containsKey(name)) {
+            throw new IllegalArgumentException("Rover not found: " + name);
+        }
+        return Collections.unmodifiableList(new ArrayList<>(history.get(name)));
     }
 
     public String getRoverState(String name) {

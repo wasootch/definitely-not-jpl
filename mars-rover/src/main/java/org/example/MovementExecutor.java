@@ -15,9 +15,10 @@ public class MovementExecutor {
         this.surfaceGrid = surfaceGrid;
     }
 
-    public void executeCommands(String commands) {
+    public boolean executeCommands(String commands) {
         CommandValidator.validateCommand(commands);
 
+        boolean allSucceeded = true;
         for (char cmd : commands.toCharArray()) {
             switch (cmd) {
                 case 'L':
@@ -27,10 +28,10 @@ public class MovementExecutor {
                     rover.turnRight();
                     break;
                 case 'F':
-                    move(1);
+                    allSucceeded &= move(1);
                     break;
                 case 'B':
-                    move(-1);
+                    allSucceeded &= move(-1);
                     break;
                 default:
                     logger.warn("Unknown command: {}", cmd);
@@ -38,9 +39,10 @@ public class MovementExecutor {
         }
 
         logger.info(rover.getState());
+        return allSucceeded;
     }
 
-    private void move(int delta) {
+    private boolean move(int delta) {
         if (Math.abs(delta) > MAX_DELTA) {
             throw new IllegalArgumentException(String.format("Delta: %d exceeds max: %d", delta, MAX_DELTA));
         }
@@ -65,8 +67,10 @@ public class MovementExecutor {
         if (surfaceGrid.validDestination(newX, newY)) {
             rover.setPosition(newX, newY);
             surfaceGrid.move(position, new int[]{newX, newY});
+            return true;
         } else {
             logger.warn("Invalid movement: [{}, {}] outside grid bounds or cell occupied.", newX, newY);
+            return false;
         }
     }
 }

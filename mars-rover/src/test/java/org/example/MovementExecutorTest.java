@@ -21,35 +21,35 @@ class MovementExecutorTest {
     @Test
     void forwardMovesNorthByOne() {
         Rover rover = new Rover("R1");
-        executorFor(rover).executeCommands("F");
+        assertTrue(executorFor(rover).executeCommands("F"));
         assertArrayEquals(new int[]{0, 1}, rover.getPosition());
     }
 
     @Test
     void backwardMovesSouthByOne() {
         Rover rover = new Rover("R1", new int[]{0, 3}, Direction.North);
-        executorFor(rover).executeCommands("B");
+        assertTrue(executorFor(rover).executeCommands("B"));
         assertArrayEquals(new int[]{0, 2}, rover.getPosition());
     }
 
     @Test
     void turnLeftChangesDirection() {
         Rover rover = new Rover("R1");
-        executorFor(rover).executeCommands("L");
+        assertTrue(executorFor(rover).executeCommands("L"));
         assertEquals(Direction.West, rover.getDirection());
     }
 
     @Test
     void turnRightChangesDirection() {
         Rover rover = new Rover("R1");
-        executorFor(rover).executeCommands("R");
+        assertTrue(executorFor(rover).executeCommands("R"));
         assertEquals(Direction.East, rover.getDirection());
     }
 
     @Test
     void ffrffEndsAtTwoTwoFacingEast() {
         Rover rover = new Rover("R1");
-        executorFor(rover).executeCommands("FFRFF");
+        assertTrue(executorFor(rover).executeCommands("FFRFF"));
         assertArrayEquals(new int[]{2, 2}, rover.getPosition());
         assertEquals(Direction.East, rover.getDirection());
     }
@@ -57,14 +57,14 @@ class MovementExecutorTest {
     @Test
     void movementBlockedAtNorthBoundary() {
         Rover rover = new Rover("R1", new int[]{0, 5}, Direction.North);
-        executorFor(rover).executeCommands("F");
+        assertFalse(executorFor(rover).executeCommands("F"));
         assertArrayEquals(new int[]{0, 5}, rover.getPosition());
     }
 
     @Test
     void movementBlockedAtSouthBoundary() {
         Rover rover = new Rover("R1", new int[]{0, 0}, Direction.South);
-        executorFor(rover).executeCommands("F");
+        assertFalse(executorFor(rover).executeCommands("F"));
         assertArrayEquals(new int[]{0, 0}, rover.getPosition());
     }
 
@@ -77,7 +77,7 @@ class MovementExecutorTest {
         MovementExecutor executor = new MovementExecutor(rover2, grid);
         grid.register(rover2.getPosition());
 
-        executor.executeCommands("F");
+        assertFalse(executor.executeCommands("F"));
         assertArrayEquals(new int[]{0, 0}, rover2.getPosition());
     }
 

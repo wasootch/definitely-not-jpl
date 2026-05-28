@@ -11,10 +11,16 @@ public class MovementExecutor {
 
     private final Rover rover;
     private final SurfaceGrid surfaceGrid;
+    private final RoverEventPublisher publisher;
 
     public MovementExecutor(Rover rover, SurfaceGrid surfaceGrid) {
+        this(rover, surfaceGrid, new RoverEventPublisher());
+    }
+
+    public MovementExecutor(Rover rover, SurfaceGrid surfaceGrid, RoverEventPublisher publisher) {
         this.rover = rover;
         this.surfaceGrid = surfaceGrid;
+        this.publisher = publisher;
     }
 
     public boolean executeCommands(String commands) {
@@ -49,8 +55,8 @@ public class MovementExecutor {
             throw new IllegalArgumentException(String.format("Delta: %d exceeds max: %d", delta, MAX_DELTA));
         }
 
-        int[] position = rover.getPosition();
-        int newX = position[0], newY = position[1];
+        int[] from = rover.getPosition();
+        int newX = from[0], newY = from[1];
         switch (rover.getDirection()) {
             case North:
                 newY += delta;
@@ -69,10 +75,12 @@ public class MovementExecutor {
         Optional<int[]> dest = surfaceGrid.resolveDestination(newX, newY);
         if (dest.isPresent()) {
             rover.setPosition(dest.get()[0], dest.get()[1]);
-            surfaceGrid.move(position, dest.get());
+            surfaceGrid.move(from, dest.get());
+            publisher.publish(new RoverMovedEvent(rover.getName(), from, dest.get()));
             return true;
         } else {
             logger.warn("Invalid movement: [{}, {}] outside grid bounds or cell occupied.", newX, newY);
+            publisher.publish(new RoverBlockedEvent(rover.getName(), from, new int[]{newX, newY}));
             return false;
         }
     }

@@ -10,8 +10,9 @@ import java.util.Map;
 
 public class SquadCoordinator {
     private static final int MAX_HISTORY = 10;
-
+    
     private final SurfaceGrid surfaceGrid;
+    private final RoverEventPublisher publisher = new RoverEventPublisher();
     private final List<Rover> rovers = new ArrayList<>();
     private final Map<String, Deque<CommandRecord>> history = new HashMap<>();
 
@@ -23,6 +24,10 @@ public class SquadCoordinator {
         this.surfaceGrid = surfaceGrid;
     }
 
+    public void subscribe(RoverEventListener listener) {
+        publisher.subscribe(listener);
+    }
+
     public void deployRover(Rover rover) {
         if (!isPositionEmpty(rover.getPosition())) {
             throw new RuntimeException("Unable to deploy rover. Position occupied.");
@@ -31,6 +36,7 @@ public class SquadCoordinator {
         this.surfaceGrid.register(rover.getPosition());
         rovers.add(rover);
         history.put(rover.getName(), new ArrayDeque<>());
+        publisher.publish(new RoverDeployedEvent(rover.getName(), rover.getPosition()));
     }
 
     public boolean commandRover(String name, String commands) {
@@ -39,7 +45,7 @@ public class SquadCoordinator {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Rover not found: " + name));
 
-        MovementExecutor executor = new MovementExecutor(rover, surfaceGrid);
+        MovementExecutor executor = new MovementExecutor(rover, surfaceGrid, publisher);
         boolean result = executor.executeCommands(commands);
 
         Deque<CommandRecord> roverHistory = history.get(name);

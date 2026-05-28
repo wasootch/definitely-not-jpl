@@ -3,6 +3,7 @@ package org.example;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -153,5 +154,58 @@ class MarsRoverIntegrationTest {
         coordinator.deployRover(mover);
         assertFalse(coordinator.commandRover("Mover", "F"));
         assertArrayEquals(new int[]{5, 0}, mover.getPosition());
+    }
+
+    @Test
+    void deployFiresDeployedEvent() {
+        List<RoverEvent> events = new ArrayList<>();
+        coordinator.subscribe(events::add);
+
+        coordinator.deployRover(new Rover("R1"));
+
+        assertEquals(1, events.size());
+        assertInstanceOf(RoverDeployedEvent.class, events.get(0));
+        assertEquals("R1", events.get(0).getRoverName());
+    }
+
+    @Test
+    void successfulMoveFiresMovedEvent() {
+        List<RoverEvent> events = new ArrayList<>();
+        coordinator.subscribe(events::add);
+
+        coordinator.deployRover(new Rover("R1"));
+        coordinator.commandRover("R1", "F");
+
+        long movedCount = events.stream().filter(e -> e instanceof RoverMovedEvent).count();
+        assertEquals(1, movedCount);
+
+        RoverMovedEvent moved = (RoverMovedEvent) events.stream()
+                .filter(e -> e instanceof RoverMovedEvent).findFirst().orElseThrow();
+        assertArrayEquals(new int[]{0, 0}, moved.getFrom());
+        assertArrayEquals(new int[]{0, 1}, moved.getTo());
+    }
+
+    @Test
+    void blockedMoveFiresBlockedEvent() {
+        List<RoverEvent> events = new ArrayList<>();
+        coordinator.subscribe(events::add);
+
+        coordinator.deployRover(new Rover("R1", new int[]{0, 5}, Direction.North));
+        coordinator.commandRover("R1", "F");
+
+        long blockedCount = events.stream().filter(e -> e instanceof RoverBlockedEvent).count();
+        assertEquals(1, blockedCount);
+    }
+
+    @Test
+    void multiCommandSequenceFiresCorrectEventSequence() {
+        List<RoverEvent> events = new ArrayList<>();
+        coordinator.subscribe(events::add);
+
+        coordinator.deployRover(new Rover("R1"));
+        coordinator.commandRover("R1", "FF");
+
+        assertEquals(1, events.stream().filter(e -> e instanceof RoverDeployedEvent).count());
+        assertEquals(2, events.stream().filter(e -> e instanceof RoverMovedEvent).count());
     }
 }

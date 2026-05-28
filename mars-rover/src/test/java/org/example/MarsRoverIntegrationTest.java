@@ -122,4 +122,36 @@ class MarsRoverIntegrationTest {
         assertFalse(history.get(0).succeeded());
         assertTrue(history.get(1).succeeded());
     }
+
+    @Test
+    void roverWrapsAroundEastBoundary() {
+        SurfaceGrid grid = new SurfaceGrid(0, 0, 5, 5, new WraparoundStrategy());
+        coordinator = new SquadCoordinator(grid);
+        Rover rover = new Rover("Rover", new int[]{5, 0}, Direction.East);
+        coordinator.deployRover(rover);
+        coordinator.commandRover("Rover", "F");
+        assertArrayEquals(new int[]{0, 0}, rover.getPosition());
+    }
+
+    @Test
+    void roverWrapsAroundNorthBoundary() {
+        SurfaceGrid grid = new SurfaceGrid(0, 0, 5, 5, new WraparoundStrategy());
+        coordinator = new SquadCoordinator(grid);
+        Rover rover = new Rover("Rover", new int[]{0, 5}, Direction.North);
+        coordinator.deployRover(rover);
+        coordinator.commandRover("Rover", "F");
+        assertArrayEquals(new int[]{0, 0}, rover.getPosition());
+    }
+
+    @Test
+    void wraparoundIsBlockedIfDestinationOccupied() {
+        SurfaceGrid grid = new SurfaceGrid(0, 0, 5, 5, new WraparoundStrategy());
+        coordinator = new SquadCoordinator(grid);
+        Rover blocker = new Rover("Blocker", new int[]{0, 0}, Direction.North);
+        Rover mover   = new Rover("Mover",   new int[]{5, 0}, Direction.East);
+        coordinator.deployRover(blocker);
+        coordinator.deployRover(mover);
+        assertFalse(coordinator.commandRover("Mover", "F"));
+        assertArrayEquals(new int[]{5, 0}, mover.getPosition());
+    }
 }

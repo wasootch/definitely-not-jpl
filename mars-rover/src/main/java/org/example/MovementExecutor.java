@@ -3,6 +3,8 @@ package org.example;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 public class MovementExecutor {
     private static final Logger logger = LoggerFactory.getLogger(MovementExecutor.class);
     private static final int MAX_DELTA = 1;
@@ -64,9 +66,10 @@ public class MovementExecutor {
                 break;
         }
 
-        if (surfaceGrid.validDestination(newX, newY)) {
-            rover.setPosition(newX, newY);
-            surfaceGrid.move(position, new int[]{newX, newY});
+        Optional<int[]> dest = surfaceGrid.resolveDestination(newX, newY);
+        if (dest.isPresent()) {
+            rover.setPosition(dest.get()[0], dest.get()[1]);
+            surfaceGrid.move(position, dest.get());
             return true;
         } else {
             logger.warn("Invalid movement: [{}, {}] outside grid bounds or cell occupied.", newX, newY);

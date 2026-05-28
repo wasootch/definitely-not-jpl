@@ -18,30 +18,26 @@ public class MovementExecutor {
     public void executeCommands(String commands) {
         CommandValidator.validateCommand(commands);
 
-        try {
-            for (char cmd : commands.toCharArray()) {
-                switch (cmd) {
-                    case 'L':
-                        rover.turnLeft();
-                        break;
-                    case 'R':
-                        rover.turnRight();
-                        break;
-                    case 'F':
-                        move(1);
-                        break;
-                    case 'B':
-                        move(-1);
-                        break;
-                    default:
-                        logger.warn("Unknown command: {}", cmd);
-                }
+        for (char cmd : commands.toCharArray()) {
+            switch (cmd) {
+                case 'L':
+                    rover.turnLeft();
+                    break;
+                case 'R':
+                    rover.turnRight();
+                    break;
+                case 'F':
+                    move(1);
+                    break;
+                case 'B':
+                    move(-1);
+                    break;
+                default:
+                    logger.warn("Unknown command: {}", cmd);
             }
-
-            logger.info(rover.getState());
-        } catch (Exception e) {
-            logger.error("Error executing commands for rover {}: {}", rover.getName(), e.getMessage(), e);
         }
+
+        logger.info(rover.getState());
     }
 
     private void move(int delta) {
